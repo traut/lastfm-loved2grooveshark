@@ -1,0 +1,7 @@
+lastfm-loved2grooveshark
+
+================================
+
+Creates Grooveshark playlist with your loved tracks from Last.FM
+
+You should fill constacts in py-file with your API keys and logins.
