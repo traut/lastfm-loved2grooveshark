@@ -47,33 +47,13 @@ def add_song(count, result):
 
     log.debug('%d: found: ID=%s "%s" by "%s", album "%s"' % (count, id, found_title, found_artist, found_album))
 
-for track in parsed_lastfm.findall('*/track'):
-
-    title = track.find('name').text
-    artist = track.find('artist/name').text
-
-    counter += 1
-
-    log.debug('%d: Looking for "%s" by "%s"' % (counter, title, artist))
-
-    # 1st search attempt
-    search_data = urllib.urlencode(dict(query=title.encode('utf-8'), artist=artist.encode('utf-8')))
-    response = json.load(urllib.urlopen(grooveshark_search_url, data=search_data))
-
+def process_search_response(response):
+    found = False
     results = response['Result']
 
     if type(results) == list and len(results) > 0:
+        found = True
         add_song(counter, results[0])
-    else:
-        # 2nd search attempt
-        search_data = urllib.urlencode(dict(query=('%s %s' % (title, artist)).encode('utf-8')))
-        response = json.load(urllib.urlopen(grooveshark_search_url, data=search_data))
-
-        results = response['Result']
-        if type(results) == list and len(results) > 0:
-            add_song(counter, results[0])
-        else:
-            skipped.append((title, artist))
 
     calls_left = response['RateLimit']['CallsRemaining']
     reset_time = response['RateLimit']['ResetTime']
@@ -83,6 +63,31 @@ for track in parsed_lastfm.findall('*/track'):
         log.info("Going to sleep for %d" % secs)
         time.sleep(secs)
         log.info("Morning!")
+
+    return found
+
+
+for track in parsed_lastfm.findall('*/track'):
+
+    title = track.find('name').text
+    artist = track.find('artist/name').text
+
+    counter += 1
+
+    log.debug('%d: looking for "%s" by "%s"' % (counter, title, artist))
+
+    # 1st search attempt
+    search_data = urllib.urlencode(dict(query=title.encode('utf-8'), artist=artist.encode('utf-8')))
+    response = json.load(urllib.urlopen(grooveshark_search_url, data=search_data))
+
+    if not process_search_response(response):
+        # 2nd search attempt
+        search_data = urllib.urlencode(dict(query=('%s %s' % (title, artist)).encode('utf-8')))
+        response = json.load(urllib.urlopen(grooveshark_search_url, data=search_data))
+
+        if not process_search_response(response):
+            skipped.append((title, artist))
+
 
 #f = open('/tmp/songs-ok', 'w')
 #f.writelines(json.dumps(songs))
