@@ -3,13 +3,11 @@
 import urllib
 import json
 import md5
-from sys import argv, exit
+import getpass
 
-if len(argv) != 3:
-  exit("Please provide your Grooveshark username and password as arguments.")
-
-gl = argv[1]
-gp = argv[2]
+print "Please provide your Grooveshark username and password as arguments."
+gl = raw_input("Username: ")
+gp = getpass.getpass("Password: ")
 
 # Getting Grooveshark API key and endpoint URL
 params = "user=%s&pass=%s" % (gl, gp)
