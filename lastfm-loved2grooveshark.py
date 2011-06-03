@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import urllib
+import urllib, urllib2
 from xml.etree import ElementTree
 import json
 import time
@@ -9,7 +9,6 @@ import logging
 log = logging.getLogger('lastfm2grooveshark')
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler())
-
 
 # constants
 
@@ -28,7 +27,6 @@ lastfm_url = "http://ws.audioscrobbler.com/2.0/?method=user.getlovedtracks&user=
 grooveshark_url = 'http://1.apishark.com/p:%s/' % grooveshark_key
 grooveshark_search_url = grooveshark_url + 'searchSongs/'
 grooveshark_create_playlist = 'http://1.apishark.com/createPlaylist/'
-
 
 lastfm_loved_xml = urllib.urlopen(lastfm_url).read()
 parsed_lastfm = ElementTree.fromstring(lastfm_loved_xml)
@@ -105,11 +103,11 @@ playlist_data = dict(gsAuth=grooveshark_gsauth, name=playlist_name, songIDs=json
 playlist = json.load(urllib.urlopen(grooveshark_create_playlist, data=urllib.urlencode(playlist_data)))
 
 if playlist['Success']:
-    log.info("Playlist created: %s" % playlist['Result']['Url'])
+    googl_request = urllib2.Request("https://www.googleapis.com/urlshortener/v1/url",
+        headers = { "Content-Type": "application/json" },
+        data = "{ 'longUrl' : '%s' }" % playlist['Result']['Url'])
+    shorten = json.load(urllib2.urlopen(googl_request))
+#   log.info("Playlist created: %s" % playlist['Result']['Url'])
+    log.info("Playlist created: %s" % shorten['id'])
 else:
     log.error("Playlist not created: %s" % playlist['Result']['string'])
-
-
-
-
-
